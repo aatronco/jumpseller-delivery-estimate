@@ -1,0 +1,9 @@
+{% if options.eta_enabled %}
+  <div class="eta-widget eta-widget--loading" data-eta-widget data-product-id="{{ prod.id }}" aria-live="polite">
+    <span class="eta-widget__icon" aria-hidden="true">🚚</span>
+    <div class="eta-widget__body">
+      <p class="eta-widget__title"><span class="eta-widget__skeleton" aria-hidden="true"></span></p>
+      <p class="eta-widget__meta">&nbsp;</p>
+    </div>
+  </div>
+{% endif %}

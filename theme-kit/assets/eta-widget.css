@@ -1,0 +1,59 @@
+.eta-widget {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin: 12px 0; padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: var(--theme-border-radius, 8px);
+  font-size: 0.95rem; line-height: 1.35;
+}
+.eta-widget__icon { font-size: 1.25rem; line-height: 1.2; }
+.eta-widget__body { flex: 1; min-width: 0; }
+.eta-widget__body p { margin: 0; }
+.eta-widget__title strong { font-weight: 700; }
+.eta-widget__meta { margin-top: 2px !important; opacity: 0.8; font-size: 0.875rem; min-height: 1.2em; }
+.eta-widget__countdown { margin-top: 4px !important; font-size: 0.875rem; font-weight: 600; }
+.eta-widget__change, .eta-panel__geo, .eta-panel__x {
+  background: none; border: 0; padding: 0; color: inherit; font: inherit;
+  text-decoration: underline; cursor: pointer;
+}
+.eta-widget__skeleton {
+  display: inline-block; width: 9em; height: 0.9em; vertical-align: middle; border-radius: 4px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  animation: eta-pulse 1.2s ease-in-out infinite;
+}
+@keyframes eta-pulse { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .eta-widget__skeleton { animation: none; } }
+
+.eta-panel[hidden] { display: none; }
+.eta-panel { position: fixed; inset: 0; z-index: 1100; }
+.eta-panel__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); }
+.eta-panel__sheet {
+  position: absolute; top: 72px; right: 24px; width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 96px); overflow: auto;
+  background: var(--color-background, var(--theme-background, #fff)); color: var(--color-main, var(--theme-text, #111));
+  border-radius: var(--theme-border-radius, 12px); padding: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+.eta-panel__x { position: absolute; top: 8px; right: 12px; font-size: 1.5rem; text-decoration: none; }
+.eta-panel__title { margin: 0 0 10px; font-weight: 700; }
+.eta-panel__search {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit;
+  border: 1px solid var(--color-border, color-mix(in srgb, currentColor 25%, transparent)); border-radius: 8px;
+  background: transparent; color: inherit;
+}
+.eta-panel__geo { display: block; margin: 10px 0 4px; }
+.eta-panel__msg { margin: 6px 0 0; font-size: 0.875rem; opacity: 0.8; }
+.eta-panel__list { list-style: none; margin: 8px 0 0; padding: 0; }
+.eta-panel__list button {
+  width: 100%; text-align: left; padding: 10px 8px; border: 0; background: none;
+  color: inherit; font: inherit; border-radius: 6px; cursor: pointer;
+}
+.eta-panel__list button:hover, .eta-panel__list button:focus-visible {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+@media (max-width: 991.98px) {
+  .eta-panel__sheet {
+    top: auto; right: 0; bottom: 0; left: 0; width: 100%;
+    max-height: 80vh; border-radius: 16px 16px 0 0;
+  }
+}

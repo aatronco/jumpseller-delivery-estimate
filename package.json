@@ -1,0 +1,14 @@
+{
+  "name": "jumpseller-delivery-estimate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Delivery price + ETA widget for Jumpseller product pages",
+  "scripts": {
+    "test": "node --test 'test/**/*.test.mjs'",
+    "build": "node scripts/build.mjs",
+    "build:comunas": "node scripts/build-comunas.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}

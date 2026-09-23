@@ -1,0 +1,27 @@
+{% comment %}
+  Delivery estimate — config + shared comuna panel. Render once in templates/layout.liquid.
+  Options: Opciones del tema > Envío estimado.
+{% endcomment %}
+{% if options.eta_enabled %}
+  <div id="eta-config" hidden
+    data-origin="{{ options.eta_origin_comuna | escape }}"
+    data-cutoff="{{ options.eta_cutoff | escape }}"
+    data-days="{% if options.eta_day_sun %}0,{% endif %}{% if options.eta_day_mon %}1,{% endif %}{% if options.eta_day_tue %}2,{% endif %}{% if options.eta_day_wed %}3,{% endif %}{% if options.eta_day_thu %}4,{% endif %}{% if options.eta_day_fri %}5,{% endif %}{% if options.eta_day_sat %}6{% endif %}"
+    data-holidays="{{ options.eta_holidays | escape }}"
+    data-flat-comunas="{{ options.eta_flat_comunas | escape }}"
+    data-flat-table="{{ options.eta_flat_table | escape }}"
+    data-countdown="{% if options.eta_countdown %}1{% endif %}"
+    data-box="{{ options.eta_box_length | escape }}x{{ options.eta_box_width | escape }}x{{ options.eta_box_height | escape }}"
+    data-services="{{ options.eta_services | escape }}"></div>
+  <div class="eta-panel" data-eta-panel hidden>
+    <div class="eta-panel__backdrop" data-eta-close></div>
+    <div class="eta-panel__sheet" role="dialog" aria-modal="true" aria-labelledby="eta-panel-title">
+      <button type="button" class="eta-panel__x" data-eta-close aria-label="Cerrar">×</button>
+      <p class="eta-panel__title" id="eta-panel-title">¿Dónde lo recibes?</p>
+      <input class="eta-panel__search" type="search" placeholder="Busca tu comuna" aria-label="Busca tu comuna" autocomplete="off">
+      <button type="button" class="eta-panel__geo" data-eta-geo>📍 Usar mi ubicación</button>
+      <p class="eta-panel__msg" data-eta-msg role="status" hidden></p>
+      <ul class="eta-panel__list"></ul>
+    </div>
+  </div>
+{% endif %}

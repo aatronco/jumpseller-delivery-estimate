@@ -1,0 +1,41 @@
+{
+  "delivery-estimate": {
+    "name": "Envío estimado",
+    "icon": "truck",
+    "help": "Muestra en la página de producto cuánto cuesta el envío y cuándo llega, y agrega un selector de comuna en la barra superior.",
+    "options": {
+      "eta_enabled": { "name": "Activar envío estimado", "type": "checkbox", "default": false },
+      "eta_origin_comuna": { "name": "Comuna de origen (bodega)", "type": "input", "default": "Santiago", "visible_if": "{{ options.eta_enabled }}" },
+      "eta_cutoff": { "name": "Hora de corte (HH:MM)", "type": "input", "default": "14:00", "help": "Antes de esta hora se promete despacho el mismo día.", "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_mon": { "name": "Despacha lunes", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_tue": { "name": "Despacha martes", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_wed": { "name": "Despacha miércoles", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_thu": { "name": "Despacha jueves", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_fri": { "name": "Despacha viernes", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_sat": { "name": "Despacha sábado", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_day_sun": { "name": "Despacha domingo", "type": "checkbox", "default": false, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_holidays": {
+        "name": "Feriados (AAAA-MM-DD)", "type": "text",
+        "default": "2026-01-01, 2026-04-03, 2026-04-04, 2026-05-01, 2026-05-21, 2026-06-21, 2026-06-29, 2026-07-16, 2026-08-15, 2026-09-18, 2026-09-19, 2026-10-12, 2026-10-31, 2026-11-01, 2026-12-08, 2026-12-25, 2027-01-01, 2027-03-26, 2027-03-27, 2027-05-01, 2027-05-21, 2027-06-21, 2027-06-28, 2027-07-16, 2027-08-15, 2027-09-18, 2027-09-19, 2027-10-11, 2027-10-31, 2027-11-01, 2027-12-08, 2027-12-25",
+        "help": "Separados por coma o uno por línea.", "visible_if": "{{ options.eta_enabled }}"
+      },
+      "eta_flat_comunas": {
+        "name": "Comunas con tarifa plana", "type": "text",
+        "default": "Santiago, Cerrillos, Cerro Navia, Conchalí, El Bosque, Estación Central, Huechuraba, Independencia, La Cisterna, La Florida, La Granja, La Pintana, La Reina, Las Condes, Lo Barnechea, Lo Espejo, Lo Prado, Macul, Maipú, Ñuñoa, Pedro Aguirre Cerda, Peñalolén, Providencia, Pudahuel, Quilicura, Quinta Normal, Recoleta, Renca, San Joaquín, San Miguel, San Ramón, Vitacura",
+        "help": "Separadas por coma o una por línea. Tildes y mayúsculas no importan.", "visible_if": "{{ options.eta_enabled }}"
+      },
+      "eta_flat_table": {
+        "name": "Tabla de tarifa plana", "type": "text", "default": "30 = 2000, * = 4000",
+        "help": "Formato: peso máximo en kg = precio. * significa sin límite. Ej: 5 = 1500, 30 = 2000, * = 4000", "visible_if": "{{ options.eta_enabled }}"
+      },
+      "eta_countdown": { "name": "Mostrar cuenta regresiva antes del corte", "type": "checkbox", "default": true, "visible_if": "{{ options.eta_enabled }}" },
+      "eta_box_length": { "name": "Caja por defecto: largo (cm)", "type": "input", "default": "30", "visible_if": "{{ options.eta_enabled }}" },
+      "eta_box_width": { "name": "Caja por defecto: ancho (cm)", "type": "input", "default": "20", "visible_if": "{{ options.eta_enabled }}" },
+      "eta_box_height": { "name": "Caja por defecto: alto (cm)", "type": "input", "default": "10", "visible_if": "{{ options.eta_enabled }}" },
+      "eta_services": {
+        "name": "Servicios de courier a domicilio", "type": "text", "default": "starken:20, correos_chile:24, bluexpress:EX, bluexpress:PY",
+        "help": "empresa:código. Solo estos servicios se usan para el precio \"desde\".", "visible_if": "{{ options.eta_enabled }}"
+      }
+    }
+  }
+}

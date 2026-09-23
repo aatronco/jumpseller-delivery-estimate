@@ -26,7 +26,7 @@
 
 ## Review Focus
 
-1. **Geolocation returns a name that is not a comuna** (e.g. Nominatim gives `city: "Santiago"` for a Providencia address, or a region name). Expected: pick the most specific address field that matches a known comuna; if none matches, return `null` and keep the selector open. → test in Task 6.
+1. **Geolocation returns a name that is not a comuna** (e.g. Nominatim gives `city: "Santiago"` for a Providencia address, or a region name). Expected: use the zoom-10 object `name` (the comuna boundary), then the most specific address field that matches a known comuna; if none matches, return `null` and keep the selector open. → test in Task 6.
 2. **Comuna changes while a slow quote (1–7 s) is still in flight.** Expected: the older response never overwrites the newer comuna's price. → test in Task 7.
 3. **Current product is in the cart as a *different* variant.** Expected: the current variant's weight is still added; only the exact same product+variant is skipped. → test in Task 2.
 4. **Flat rate and cheapest courier quote are equal.** Expected: the flat rate wins and the day promise is shown. → test in Task 2.
@@ -98,7 +98,7 @@ const Rules = require('../src/eta-rules.js');
   "scripts": {
     "test": "node --test test/",
     "build": "node scripts/build.mjs",
-    "build:comunas": "node scripts/build-comunas.mjs ../../landing/_data/shipping_municipalities.yml"
+    "build:comunas": "node scripts/build-comunas.mjs"
   },
   "devDependencies": {}
 }
@@ -1009,7 +1009,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     - `{kind: 'priced', comuna, price: number, source: 'flat'|'courier', promise: PromiseDay|null, showCountdown: boolean}`
     - `{kind: 'unavailable', comuna}`
   - `searchComunas(query: string, comunas, rules, limit = 8): Comuna[]` — prefix matches first, then substring matches; accent/case-insensitive.
-  - `geoToComuna(address: object, comunas, rules): Comuna|null` — checks Nominatim fields in this order: `municipality`, `city_district`, `town`, `village`, `suburb`, `city`, `county`; returns the first that matches a comuna.
+  - `geoToComuna(result: object, comunas, rules): Comuna|null` — `result` is the full Nominatim reverse response requested with `zoom=10` (technique proven in the landing calculator's detect-location button: at zoom 10 the returned object is the comuna boundary, so `result.name` is the comuna). Checks `result.name` first, then `result.address` fields in this order: `municipality`, `city_district`, `town`, `village`, `suburb`, `city`, `county`; returns the first that matches a comuna.
   - `renderLabel(el: Element, comuna: Comuna|null): void` — `"Enviar a Providencia"` / `"¿Dónde lo recibes?"`.
   - `mountPanel(panel: Element, {comunas, rules, onPick(comuna), geolocate(): Promise<Comuna|null>}): {open(): void, close(): void}`
 - All buttons that open the panel carry `data-eta-open`. The widget renders its own `data-eta-open` button.
@@ -1114,10 +1114,15 @@ test('searchComunas: accent-insensitive, prefix first, limited', () => {
   assert.equal(UI.searchComunas('a', COMUNAS, Rules, 2).length, 2);
 });
 
-test('geoToComuna prefers the most specific field that is a comuna', () => {
-  assert.equal(UI.geoToComuna({ suburb: 'Providencia', city: 'Santiago', state: 'Región Metropolitana' }, COMUNAS, Rules).name, 'Providencia');
-  assert.equal(UI.geoToComuna({ city: 'Temuco' }, COMUNAS, Rules).name, 'Temuco');
-  assert.equal(UI.geoToComuna({ state: 'Región de la Araucanía' }, COMUNAS, Rules), null);
+test('geoToComuna uses the zoom-10 object name first (the comuna boundary)', () => {
+  assert.equal(UI.geoToComuna({ name: 'Providencia', address: { city: 'Santiago' } }, COMUNAS, Rules).name, 'Providencia');
+  assert.equal(UI.geoToComuna({ name: 'Ñuñoa' }, COMUNAS, Rules).name, 'Ñuñoa');
+});
+
+test('geoToComuna falls back to the most specific address field that is a comuna', () => {
+  assert.equal(UI.geoToComuna({ name: 'Región Metropolitana', address: { suburb: 'Providencia', city: 'Santiago' } }, COMUNAS, Rules).name, 'Providencia');
+  assert.equal(UI.geoToComuna({ address: { city: 'Temuco' } }, COMUNAS, Rules).name, 'Temuco');
+  assert.equal(UI.geoToComuna({ name: 'Región de la Araucanía', address: { state: 'Región de la Araucanía' } }, COMUNAS, Rules), null);
   assert.equal(UI.geoToComuna(null, COMUNAS, Rules), null);
 });
 
@@ -1237,13 +1242,15 @@ Expected: FAIL, `Cannot find module '../src/eta-ui.js'`.
     return prefix.concat(inner).slice(0, limit);
   }
 
-  function geoToComuna(address, comunas, rules) {
-    if (!address) return null;
+  function geoToComuna(result, comunas, rules) {
+    if (!result) return null;
     var index = {};
     comunas.forEach(function (c) { index[rules.normalizeComuna(c.name)] = c; });
-    for (var i = 0; i < GEO_FIELDS.length; i++) {
-      var v = address[GEO_FIELDS[i]];
-      if (v && index[rules.normalizeComuna(v)]) return index[rules.normalizeComuna(v)];
+    var address = result.address || {};
+    var candidates = [result.name].concat(GEO_FIELDS.map(function (f) { return address[f]; }));
+    for (var i = 0; i < candidates.length; i++) {
+      var hit = candidates[i] && index[rules.normalizeComuna(candidates[i])];
+      if (hit) return hit;
     }
     return null;
   }
@@ -1546,10 +1553,10 @@ Expected: FAIL, `Cannot find module '../src/eta-boot.js'`.
     return new Promise(function (resolve) {
       if (!win.navigator.geolocation) { resolve(null); return; }
       win.navigator.geolocation.getCurrentPosition(function (pos) {
-        var url = 'https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=14' +
+        var url = 'https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=10' +
           '&lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude;
         win.fetch(url).then(function (r) { return r.json(); })
-          .then(function (j) { resolve(ui.geoToComuna(j && j.address, comunas, rules)); })
+          .then(function (j) { resolve(ui.geoToComuna(j, comunas, rules)); })
           .catch(function () { resolve(null); });
       }, function () { resolve(null); }, { timeout: 10000 });
     });
@@ -1930,7 +1937,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 9: Install on the test store and verify end to end
 
-Run by the controller session (needs the `jumpseller` CLI with store access and a browser). **Prerequisite:** the user has run `jumpseller access add alejandrotest.jumpseller.com` (interactive).
+Run by the controller session (needs the `jumpseller` CLI with store access and a browser). **Prerequisite:** the user has run `jumpseller access add STORE.jumpseller.com` (interactive).
 
 **Files:**
 - Modify (in the gitignored `theme/` export, not committed): the four files listed in `theme-kit/INSTALL.md`.
@@ -1939,8 +1946,8 @@ Run by the controller session (needs the `jumpseller` CLI with store access and 
 - [ ] **Step 1: Export the active theme**
 
 ```bash
-jumpseller theme list -s alejandrotest.jumpseller.com
-jumpseller theme export <active-id> theme -s alejandrotest.jumpseller.com
+jumpseller theme list -s STORE.jumpseller.com
+jumpseller theme export <active-id> theme -s STORE.jumpseller.com
 ```
 
 - [ ] **Step 2: Confirm the variant input name**
@@ -1952,7 +1959,7 @@ If the form uses a name other than `variant_id` or `variant`, update the selecto
 
 - [ ] **Step 4: Verify flag off = no change**
 
-Run: `curl -s https://alejandrotest.jumpseller.com/farinha-1kg | grep -c 'eta-'`
+Run: `curl -s https://STORE.jumpseller.com/farinha-1kg | grep -c 'eta-'`
 Expected: `0`.
 
 - [ ] **Step 5: Enable** `eta_enabled` in the theme options (admin UI) and verify with Playwright at 1280 px and 375 px:
